@@ -1,0 +1,12 @@
+.vs
+Apks
+Library
+Logs
+obj
+Packages
+ProjectSettings
+UserSettings
+.vsconfig
+*.csproj
+*.sln
+
