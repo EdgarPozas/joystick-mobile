@@ -1,3 +1,4 @@
+from pynput.keyboard import Key, Controller
 from sanic import Sanic
 from sanic.response import empty, json,file,text,empty
 import vgamepad as vg
@@ -5,6 +6,7 @@ import time
 import threading
 
 app = Sanic("Joystick")
+keyboard = Controller()
 
 data={
     "x":0,
@@ -13,15 +15,25 @@ data={
     "vx":0,
     "vy":0,
     "sl":0,
-    "sr":0,
-    "btn1":False,
-    "btn2":False,
-    "btn3":False,
-    "btn4":False,
-    "btn5":False,
-    "btn6":False,
-    "btn7":False,
-    "btn8":False,
+    "break":{"active":False,"key":vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_UP},
+    "parking":{"active":False,"ctrl":True,"key":vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_DOWN},
+    "landing gear":{"active":False,"key":vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_LEFT},
+    "lights":{"active":False,"key":vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_RIGHT},
+    "simulation speed":{"active":False,"key":vg.XUSB_BUTTON.XUSB_GAMEPAD_START},
+    "extra 2":{"active":False,"key":""},
+    "extra 3":{"active":False,"key":""},
+    "extra 4":{"active":False,"key":""},
+    "flap up":{"active":False,"shift":True,"key":vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_THUMB},
+    "flap down":{"active":False,"key":vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_THUMB},
+    "spoiler arm":{"active":False,"shift":True,"key":vg.XUSB_BUTTON.XUSB_GAMEPAD_LEFT_SHOULDER},
+    "spoiler full":{"active":False,"key":vg.XUSB_BUTTON.XUSB_GAMEPAD_RIGHT_SHOULDER},
+    # "neutral":{"active":False,"key":vg.XUSB_BUTTON.XUSB_GAMEPAD_GUIDE}, #not
+    "reverse":{"active":False,"key":vg.XUSB_BUTTON.XUSB_GAMEPAD_A},
+    "next view":{"active":False,"key":vg.XUSB_BUTTON.XUSB_GAMEPAD_B},
+    "next seat":{"active":False,"key":vg.XUSB_BUTTON.XUSB_GAMEPAD_X},
+    "minus":{"active":False,"key":vg.XUSB_BUTTON.XUSB_GAMEPAD_Y},
+    "plus":{"active":False,"key":vg.XUSB_BUTTON.XUSB_GAMEPAD_BACK},
+    "reset":{"active":False,"key":vg.XUSB_BUTTON.XUSB_GAMEPAD_GUIDE},
     "running":True
 }
 
@@ -34,15 +46,12 @@ async def manage_data(request):
     data["y"]=float(request.form["3"][0])
     data["z"]=float(request.form["4"][0])
     data["sl"]=float(request.form["5"][0])
-    data["sr"]=float(request.form["6"][0])
-    data["btn1"]=request.form["7"][0]=="True"
-    data["btn2"]=request.form["8"][0]=="True"
-    data["btn3"]=request.form["9"][0]=="True"
-    data["btn4"]=request.form["10"][0]=="True"
-    data["btn5"]=request.form["11"][0]=="True"
-    data["btn6"]=request.form["12"][0]=="True"
-    data["btn7"]=request.form["13"][0]=="True"
-    data["btn8"]=request.form["14"][0]=="True"
+
+    keys=list(data.keys())[6:len(data)-1]
+    i=6
+    for key in keys:
+        data[key]["active"]=request.form[str(i)][0]=="True"
+        i+=1
 
     return json({})
 
@@ -76,50 +85,17 @@ def runController():
         gamepad.left_trigger_float(value_float=data["sl"])
         gamepad.right_trigger_float(value_float=-data["sl"]+1)
 
-        if data["btn1"]:
-            gamepad.press_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
-        else:
-            gamepad.release_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
-
-        if data["btn2"]:
-            gamepad.press_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_B)
-        else:
-            gamepad.release_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_B)
-
-        if data["btn3"]:
-            gamepad.press_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_X)
-        else:
-            gamepad.release_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_X)
-
-        if data["btn4"]:
-            gamepad.press_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_Y)
-        else:
-            gamepad.release_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_Y)
-
-        if data["btn5"]:
-            gamepad.press_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_UP)
-        else:
-            gamepad.release_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_UP)
-
-        if data["btn6"]:
-            gamepad.press_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_DOWN)
-        else:
-            gamepad.release_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_DOWN)
-
-        if data["btn7"]:
-            gamepad.press_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_LEFT)
-        else:
-            gamepad.release_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_LEFT)
-
-        if data["btn8"]:
-            gamepad.press_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_RIGHT)
-        else:
-            gamepad.release_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_RIGHT)
-
+        keys=list(data.keys())[6:len(data)-1]
+        for key in keys:
+            if data[key]["key"]=="":
+                continue
+            if data[key]["active"]:
+                gamepad.press_button(button=data[key]["key"])
+            else:
+                gamepad.release_button(button=data[key]["key"])
+        
         gamepad.update()
         time.sleep(0.01)
-
-
 
 if __name__ == '__main__':
     runServer()

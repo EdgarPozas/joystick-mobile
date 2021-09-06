@@ -13,20 +13,34 @@ public class Control : MonoBehaviour
     public string url;
     public bool connected;
     public float updateEach;
+
     public float sliderLeft;
-    public float sliderRight;
     public Vector3 calibrateAcceleration;
-    public Quaternion calibrateGyro;
     public Dictionary<string, bool> buttons = new Dictionary<string, bool>()
     {
-        {"1",false },
-        {"2",false },
-        {"3",false },
-        {"4",false },
-        {"5",false },
-        {"6",false },
-        {"7",false },
-        {"8",false },
+        {"Break",false },
+        {"Parking",false },
+        {"Landing Gear",false },
+        {"Lights",false },
+        {"Simulation Speed",false },
+        {"Pause",false },
+        {"Extra 2",false },
+        {"Extra 3",false },
+        {"Extra 4",false },
+        {"Flap Up",false },
+        {"Flap Down",false },
+        {"Spoiler None",false },
+        {"Spoiler Arm",false },
+        {"Spoiler Full",false },
+        {"Neutral",false },
+        {"Reverse",false },
+        {"Back View",false },
+        {"Next View",false },
+        {"Back Seat",false },
+        {"Next Seat",false },
+        {"Minus",false },
+        {"Plus",false },
+        {"Reset",false }
     };
 
     private void Update()

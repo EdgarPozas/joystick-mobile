@@ -8,19 +8,14 @@ public class Controllers : MonoBehaviour
 {
     private Control control;
 
-    public Text calibrateAccelerometer;
-    public Text actualAccelerometer;
-
-    public Text calibrateGyro;
-    public Text actualGyro;
-
     public Slider sliderLeft;
-    public Slider sliderRight;
 
     public Text sliderLeftText;
-    public Text sliderRightText;
 
     public Image imageStatus;
+
+    public Toggle pilotWithJoystick;
+    public Toggle useAccelerometer;
 
     void Start()
     {
@@ -31,30 +26,29 @@ public class Controllers : MonoBehaviour
     public void calibrate()
     {
         control.calibrateAcceleration = Input.acceleration;
-        control.calibrateGyro = Input.gyro.attitude;
     }
 
     public void updateSliderLeft()
     {
-        sliderLeftText.text = (sliderLeft.value*100).ToString("##.##");
+        float value = sliderLeft.value * 100;
+        sliderLeftText.text = value==0?"0":value.ToString("###.##");
         control.sliderLeft = sliderLeft.value;
     }
 
-    public void updateSliderRight()
-    {
-        sliderRightText.text = (sliderRight.value*100).ToString("##.##");
-        control.sliderRight = sliderRight.value;
-    }
-
-    public void selectButton(GameObject button)
+    public void selectButtonPressDown(GameObject button)
     {
         control.buttons[button.name] = true;
     }
 
+    public void selectButtonPressUp(GameObject button)
+    {
+        control.buttons[button.name] = false;
+    }
+
+
     public async void connect()
     {
         control.connected = false;
-
         control.connected= await control.connection.connect();
     }
 
@@ -68,12 +62,6 @@ public class Controllers : MonoBehaviour
     {
         while (true)
         {
-            Vector3 result = control.calibrateAcceleration - Input.acceleration;
-            //Quaternion resultGyro = control.calibrateGyro - Input.gyro.attitude;
-
-            calibrateAccelerometer.text = $"x:{control.calibrateAcceleration.x},y:{control.calibrateAcceleration.y},z:{control.calibrateAcceleration.z}";
-            actualAccelerometer.text = $"x:{result.x},y:{result.y},z:{result.z}";
-
             if (control.connected)
             {
                 send();
@@ -84,8 +72,6 @@ public class Controllers : MonoBehaviour
                 imageStatus.color = Color.red;
             }
 
-            control.buttons.Keys.ToList().ForEach(x => control.buttons[x] = false);
-
             yield return new WaitForSeconds(control.updateEach);
         }
     }
@@ -93,18 +79,43 @@ public class Controllers : MonoBehaviour
     async void send()
     {
         Vector3 result = control.calibrateAcceleration - Input.acceleration;
+        Vector3 view= control.joystick.Direction;
+        if (!useAccelerometer.isOn)
+        {
+            result = Vector3.zero;
+        }
+        if (pilotWithJoystick.isOn)
+        {
+            result = new Vector3(-control.joystick.Direction.x,0, control.joystick.Direction.y);
+            view = Vector3.zero;
+        }
+        else
+        {
+            result = new Vector3(result.x, -result.y, 0);
+        }
+
         await control.connection.emit(
-            control.joystick.Direction.x, control.joystick.Direction.y,
+            view.x, view.y,
             result.x, result.y, result.z,
-            control.sliderLeft, control.sliderRight,
-            control.buttons["1"],
-            control.buttons["2"],
-            control.buttons["3"],
-            control.buttons["4"],
-            control.buttons["5"],
-            control.buttons["6"],
-            control.buttons["7"],
-            control.buttons["8"]
+            control.sliderLeft,
+            control.buttons["Break"],
+            control.buttons["Parking"],
+            control.buttons["Landing Gear"],
+            control.buttons["Lights"],
+            control.buttons["Simulation Speed"],
+            control.buttons["Extra 2"],
+            control.buttons["Extra 3"],
+            control.buttons["Extra 4"],
+            control.buttons["Flap Up"],
+            control.buttons["Flap Down"],
+            control.buttons["Spoiler Arm"],
+            control.buttons["Spoiler Full"],
+            control.buttons["Reverse"],
+            control.buttons["Next View"],
+            control.buttons["Next Seat"],
+            control.buttons["Minus"],
+            control.buttons["Plus"],
+            control.buttons["Reset"]
             );
     }
 }
